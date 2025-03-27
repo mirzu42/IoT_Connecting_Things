@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Guess the number</title>
+</head>
+<body>
+    <h2><b>I am thinking of a number between 1 - 10. See if you can guess the number...</b></h2>
+    <form id = "values">
+        <label for="name">Name:</label>
+        <input type="text" id = "name" name="name">
+        <label for="number">Number</label>
+        <input type="number" id = "number" name="number">
+        <button type="submit">Submit</button>
+    </form>
+    <script>
+        document.getElementById("values").addEventListener("submit", function(event) {
+            event.preventDefault();
+
+            const name = document.getElementById("name").value;
+            const number = document.getElementById("number").value;
+            let url = `/${encodeURIComponent(name)}`;
+            let queryParams = [];
+            queryParams.push(`number=${encodeURIComponent(number)}`);
+            url += `?${queryParams.join('&')}`;
+            window.location.href = url;
+        });
+
+
+    </script>
+</body>
+</html>
