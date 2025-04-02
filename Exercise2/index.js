@@ -9,7 +9,8 @@ const app = express();
 const readFile = util.promisify(fs.readFile);
 const writeFile = util.promisify(fs.writeFile);
 // Create variables for MQTT use here
-const MQTT_BROKER = 'mqtt://localhost'
+const MQTT_BROKER = 'mqtt://localhost';
+const TOPIC = 'Miro';
 
 app.use(bodyParser.json());
 function read(filePath = './message.json') {
@@ -24,9 +25,9 @@ const mqttClient = mqtt.connect(MQTT_BROKER);
 // Check that you are connected to MQTT and subscribe to a topic (connect event)
 mqttClient.on('connect', ()=>{
     console.log('MQTT Connected!');
-    mqttClient.subscribe('#', err => { // Currently subscribes to all topics. Change # to {topic} to sub to a specific topic
+    mqttClient.subscribe(TOPIC, err => {
         if(!err){
-            console.log('Successfully subscribed to all topics!');
+            console.log(`Successfully subscribed to ${TOPIC}!`);
         }
     });
 
@@ -38,8 +39,25 @@ mqttClient.on('error', err => {
 })
 
 // Handle when a subscribed message comes in (message event)
-mqttClient.on(`message`, (topic, msg) => {
+mqttClient.on(`message`, async (topic, msg) => {
     console.log(`received message on ${topic}.`, `Message: ${msg.toString()}`);
+    try {
+        const messages = await read();
+        const newMessage = {
+            id: Date.now().toString(),
+            topic: topic,
+            msg: msg.toString(),
+            timestamp: new Date().toISOString()
+        };
+        messages.push(newMessage);
+        await write(messages);
+
+        mqttClient.publish(newMessage.topic, newMessage.msg);
+
+    }catch(err){
+        console.log(err);
+    }
+
 })
 
 // Route to serve the home page
@@ -78,19 +96,14 @@ app.get('/:id', async (req, res) => {
 })
 // Route to CREATE a new message on the server and publish to mqtt broker
 app.post('/',async (req, res) => {
+    const {id, topic, msg} = req.body;
+    mqttClient.publish(topic || TOPIC, msg);
     try {
-        const messages = await read();
-        const newMessage = {
-            id: Date.now().toString(),
-            topic: req.body.topic,
-            msg: req.body.msg,
-            timestamp: new Date().toISOString()
-        };
-        messages.push(newMessage);
+        let messages = await read();
+        messages.push({id, topic, msg});
         await write(messages);
+        res.sendStatus(200);
 
-        mqttClient.publish(newMessage.topic, newMessage.msg);
-        res.status(201).json(newMessage);
 
     }catch(err){
         console.log(err);
@@ -110,4 +123,4 @@ app.delete('/:id', async (req, res) => {
 });
 
 // listen to the port
-app.listen(3000);
+app.listen(3001, '0.0.0.0', () => {});
