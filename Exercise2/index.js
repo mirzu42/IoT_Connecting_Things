@@ -52,7 +52,7 @@ mqttClient.on(`message`, async (topic, msg) => {
         messages.push(newMessage);
         await write(messages);
 
-        mqttClient.publish(newMessage.topic, newMessage.msg);
+        //mqttClient.publish(newMessage.topic, newMessage.msg);
 
     }catch(err){
         console.log(err);
@@ -96,7 +96,10 @@ app.get('/:id', async (req, res) => {
 })
 // Route to CREATE a new message on the server and publish to mqtt broker
 app.post('/',async (req, res) => {
-    const {id, topic, msg} = req.body;
+    let {id, topic, msg} = req.body;
+    if (!id){
+        id = Date.now().toString();
+    }
     mqttClient.publish(topic || TOPIC, msg);
     try {
         let messages = await read();
