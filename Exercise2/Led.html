@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>MetroMessenger - LED Control</title>
+</head>
+<body>
+<header>
+  <a href="/"><h1>MetroMessenger</h1></a>
+  <a href="/add">Add a Message</a><br>
+  <a href="/led">Control LEDs</a>
+</header>
+<main>
+  <h2>Control LEDs</h2>
+  <form id="led-form" method="post">
+    <label for="led">LED</label>
+    <input id="led" type="text" name="led" placeholder="D1, D2, D3" required>
+
+    <label for="state">State</label>
+    <select id="state" name="state" required>
+      <option value="ON">ON</option>
+      <option value="OFF">OFF</option>
+      <option value="TOGGLE">TOGGLE</option>
+    </select>
+
+    <input type="submit" value="Send Command">
+  </form>
+
+  <script>
+    const form = document.getElementById('led-form');
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      const led = form.led.value.trim().toUpperCase(); // D1/D2/D3
+      const state = form.state.value;
+
+      const jsonMessage = {
+        led: led,
+        state: state
+      };
+
+      fetch('/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          topic: 'miro/led',
+          msg: JSON.stringify(jsonMessage)
+        })
+      })
+              .then(res => {
+                if (res.status !== 200) {
+                  return Promise.reject('Failed to send message');
+                }
+                alert(`Command sent: ${led} → ${state}`);
+                form.reset();
+              })
+              .catch(err => {
+                console.error(err);
+                alert('Error sending message.');
+              });
+    });
+  </script>
+</main>
+</body>
+</html>

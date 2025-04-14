@@ -80,6 +80,10 @@ app.get('/add', (req, res) => {
     res.sendFile(path.resolve(__dirname, `./message.html`));
 })
 
+app.get('/led', (req, res) => {
+    res.sendFile(path.resolve(__dirname, `./Led.html`));
+})
+
 //Route to show a selected message. Note, it will only show the message as text. No html needed
 
 app.get('/:id', async (req, res) => {
